@@ -3,11 +3,11 @@
 
 # BunnyCdn
 
-This gem allows you to interact with the BunnyCDN API via the Pull Zones and Storage APIs.
+This gem allows you to interact with the bunny.net APIs via the Pull Zones and Storage APIs.
 
 > **⚠️ v2.0 Breaking Change:** This is a complete rewrite. The old class-based global configuration was replaced with an instance-based client. See [Migrating from v1](#migrating-from-v1) below.
 
-You need an account with [BunnyCDN](https://bunnycdn.com/).
+You need an account with [bunny.net](https://bunny.net/).
 
 ## Requirements
 
@@ -56,11 +56,20 @@ Options:
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `api_key` | (required) | Your BunnyCDN API key |
+| `api_key` | (required) | Account API Key or Storage Zone Access Key Password |
 | `base_url` | `https://api.bunny.net` | API base URL |
 | `adapter` | `Faraday.default_adapter` | Faraday adapter for HTTP |
 
 The client configures Faraday with retry middleware (max 3 retries on timeouts and server errors). All requests set `AccessKey` and `Accept: application/json` headers automatically.
+
+### Note about API Keys
+
+The bunny.net API is actually a collection of different APIs that provide a variety of functionality, and authenticating across those different APIs requires the use of different API Keys. Sometimes those keys are referred to as an "API Key" and sometimes as an "Access Key", but to make things as crystal clear as possible here are the two use cases with this gem: 
+
+* **Pull Zones (using the Core API)** require your *Account API Key* that is found in **Account Settings > API Key**.
+* **Storage Zones (using the Storage API)** require your *Access Key Password* that is found in **Storage Zone > Access**.
+
+When configuring the Client, the value that you will pass in to `api_key:` will be either your *Account API Key* or your *Storage Zone Access Key Password* depending on the type of functionality that you want.
 
 ### Resource Accessors
 
@@ -139,7 +148,7 @@ end
 
 ## Storage
 
-Storage operations target the BunnyCDN storage API. Each call specifies the storage zone name. The connection is routed to the correct regional subdomain automatically.
+Storage operations target the bunny.net Storage API. Each call specifies the storage zone name. The connection is routed to the correct regional subdomain automatically.
 
 ### Regions
 
@@ -157,7 +166,7 @@ Available regions:
 | `jh` | Johannesburg, SA |
 | `syd` | Sydney, SYD |
 
-If no region is specified, `de` (Frankfurt) is used.
+If no region is specified, `de` (Frankfurt) is used. If your Storage Zone is located *anywhere else but Frankfurt*, **you must pass in the region** or the authentication will fail with a `401`.
 
 ### List Files
 
@@ -234,7 +243,7 @@ BunnyCdn::PullZone.list
 client = BunnyCdn::Client.new(api_key: ENV["BUNNY_API_KEY"])
 
 # Storage — zone and region are per-call, not global
-client.storage(zone_name: "my-zone").upload("path/to/file.txt", file_data)
+client.storage(zone_name: "my-zone", region: "la").upload("path/to/file.txt", file_data)
 
 # Pull Zones — single client covers all operations
 client.pull_zones.list
